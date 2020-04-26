@@ -1,29 +1,16 @@
 import React from "react";
 import styled, { keyframes } from "styled-components";
 
-const move = keyframes`
-    from {
-        transform: translateY(10px);
-    }
-    to {
-        transform: translateY(100px);
-    }
-`;
-
 const Canvas = styled.svg`
   width: ${window.innerWidth}px;
   height: ${window.innerHeight}px;
 `;
 
-const StyledRect = styled.rect`
-  animation-fill-mode: forwards;
-`;
-
 const Snake = props => {
   return (
-    <StyledRect
-      x={props.x % window.innerWidth}
-      y={props.y % window.innerHeight}
+    <rect
+      x={(props.x + window.innerWidth) % window.innerWidth}
+      y={(props.y + window.innerHeight) % window.innerHeight}
       width={props.width}
       height={props.height}
     />
@@ -38,20 +25,66 @@ const last = arr => {
   return arr.slice(-1)[0];
 };
 
-const calcNewX = (lastSnake, key) => {
-  return lastSnake.x + 1;
+const calcNewX = (lastSnake, key, i) => {
+  if (!verticalKey(key)) {
+    if (key === "ArrowRight") {
+      return lastSnake.x + 1 + i;
+    } else {
+      return lastSnake.x - 1 - i;
+    }
+  } else {
+    return lastSnake.x;
+  }
 };
 
-const calcNewY = (lastSnake, key) => {
-  return lastSnake.y;
+const calcNewY = (lastSnake, key, i) => {
+  if (verticalKey(key)) {
+    if (key === "ArrowDown") {
+      return lastSnake.y + 1 + i;
+    } else {
+      return lastSnake.y - 1 - i;
+    }
+  } else {
+    return lastSnake.y;
+  }
 };
 
-const newSnake = (s, n, key) => {
+const verticalKey = key => key === "ArrowUp" || key === "ArrowDown";
+
+const direction = s => {
+  const l = last(s);
+  const sl = s.slice(-2)[0];
+  if (l.y > sl.y) {
+    return "up";
+  } else if (l.y < sl.y) {
+    return "down";
+  } else if (l.x < sl.x) {
+    return "left";
+  } else {
+    return "right";
+  }
+};
+
+const newSnake = (s, n, key, lastKey) => {
   const lastSnake = last(s);
   const newPieces = Array(n)
     .fill(0)
     .map((_, i) =>
-      piece(calcNewX(lastSnake, key) + i, calcNewY(lastSnake, key), false),
+      piece(
+        calcNewX(lastSnake, key, i) +
+          (!lastSnake.vertical && verticalKey(key)
+            ? direction(s) === "left"
+              ? 0
+              : -9
+            : 0),
+        calcNewY(lastSnake, key, i) +
+          (lastSnake.vertical && !verticalKey(key)
+            ? direction(s) === "up"
+              ? -9
+              : 0
+            : 0),
+        verticalKey(key),
+      ),
     );
   return s.slice(n).concat(...newPieces);
 };
@@ -62,15 +95,21 @@ const defaultSnake = Array(100)
   .fill(0)
   .map((_, i) => piece(i, 10, false));
 
+const isOpposite = (key, newKey) => {
+  return (
+    (verticalKey(key) && !verticalKey(newKey)) ||
+    (verticalKey(newKey) && !verticalKey(key))
+  );
+};
+
 const App = () => {
   const [snake, setSnake] = React.useState(defaultSnake);
 
-  const [key, setKey] = React.useState(null);
+  const [key, setKey] = React.useState("ArrowRight");
 
   React.useEffect(() => {
     const interval = setInterval(() => {
       setSnake(newSnake(snake, 4, key));
-      setKey(null);
     }, 1000 / 60);
     return () => {
       clearInterval(interval);
@@ -78,7 +117,11 @@ const App = () => {
   }, [snake]);
 
   const handleKeyDown = event => {
-    if (keyCodes.has(event.key)) {
+    if (
+      keyCodes.has(event.key) &&
+      event.key !== key &&
+      isOpposite(key, event.key)
+    ) {
       setKey(event.key);
     }
   };
@@ -88,7 +131,7 @@ const App = () => {
     return () => {
       document.removeEventListener("keydown", handleKeyDown, false);
     };
-  }, []);
+  }, [key]);
 
   return (
     <Canvas>
