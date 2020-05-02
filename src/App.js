@@ -1,5 +1,5 @@
 import React from "react";
-import styled, { keyframes } from "styled-components";
+import styled from "styled-components";
 
 const Canvas = styled.svg`
   width: ${window.innerWidth}px;
@@ -15,6 +15,25 @@ const Snake = props => {
       height={props.height}
     />
   );
+};
+
+const Apple = props => {
+  return (
+    <rect
+      x={props.x}
+      y={props.y}
+      width="10"
+      height="10"
+      style={{ fill: "red" }}
+    />
+  );
+};
+
+const generateApple = () => {
+  return {
+    x: Math.random() * (window.innerWidth - 10) + 10,
+    y: Math.random() * (window.innerHeight - 10) + 10,
+  };
 };
 
 const piece = (x, y, vertical) => {
@@ -65,7 +84,7 @@ const direction = s => {
   }
 };
 
-const newSnake = (s, n, key, lastKey) => {
+const newSnake = (s, n, key) => {
   const lastSnake = last(s);
   const newPieces = Array(n)
     .fill(0)
@@ -102,14 +121,65 @@ const isOpposite = (key, newKey) => {
   );
 };
 
+const isCollision = (snake, obj, w, h, key) => {
+  const fp = last(snake);
+  const sw = fp.vertical ? 10 : 4;
+  const sh = fp.vertical ? 4 : 10;
+  const x3 = obj.x;
+  const y3 = obj.y;
+  const x4 = obj.x + w;
+  const y4 = obj.y + h;
+  let x1, y1, x2, y2;
+  if (key === "ArrowRight") {
+    x1 = fp.x - sw;
+    y1 = fp.y;
+    x2 = fp.x;
+    y2 = fp.y + sh;
+  } else if (key === "ArrowLeft") {
+    x1 = fp.x;
+    y1 = fp.y;
+    x2 = fp.x + sw;
+    y2 = fp.y + sh;
+  } else if (key === "ArrowUp") {
+    x1 = fp.x;
+    y1 = fp.y;
+    x2 = fp.x + sw;
+    y2 = fp.y + sh;
+  } else if (key === "ArrowDown") {
+    x1 = fp.x;
+    y1 = fp.y - sh;
+    x2 = fp.x + sw;
+    y2 = fp.y;
+  }
+  const x5 = Math.max(x1, x3);
+  const y5 = Math.max(y1, y3);
+  const x6 = Math.min(x2, x4);
+  const y6 = Math.min(y2, y4);
+  if (x5 > x6 || y5 > y6) {
+    return false;
+  } else {
+    return true;
+  }
+};
+
 const App = () => {
   const [snake, setSnake] = React.useState(defaultSnake);
 
   const [key, setKey] = React.useState("ArrowRight");
 
+  const [apples, setApples] = React.useState([generateApple()]);
+
   React.useEffect(() => {
     const interval = setInterval(() => {
-      setSnake(newSnake(snake, 4, key));
+      const ns = newSnake(snake, 4, key);
+      apples.map((a, i) => {
+        if (isCollision(ns, a, 10, 10, key)) {
+          setApples(
+            apples.slice(0, i).concat(generateApple(), ...apples.slice(i + 1)),
+          );
+        }
+      });
+      setSnake(ns);
     }, 1000 / 60);
     return () => {
       clearInterval(interval);
@@ -142,6 +212,9 @@ const App = () => {
           width={s.vertical ? "10" : "1"}
           height={s.vertical ? "1" : "10"}
         />
+      ))}
+      {apples.map(a => (
+        <Apple x={a.x} y={a.y} />
       ))}
     </Canvas>
   );
