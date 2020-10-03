@@ -96,7 +96,7 @@ const direction = s => {
   }
 };
 
-const newSnake = (s, n, key) => {
+const newSnake = (s, n, key, extend) => {
   const lastSnake = last(s);
   const newPieces = Array(n)
     .fill(0)
@@ -117,7 +117,7 @@ const newSnake = (s, n, key) => {
         verticalKey(key),
       ),
     );
-  return s.slice(n).concat(...newPieces);
+  return extend ? s.concat(...newPieces) : s.slice(n).concat(...newPieces);
 };
 
 const keyCodes = new Set(["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"]);
@@ -182,7 +182,12 @@ const Game = () => {
   const [key, setKey] = React.useState("ArrowRight");
 
   // Stores current list of apple locations
-  const [apples, setApples] = React.useState([generateApple()]);
+  const [apples, setApples] = React.useState([
+    generateApple(),
+    generateApple(),
+    generateApple(),
+    generateApple(),
+  ]);
 
   // Keep apple score
   const [score, setScore] = React.useState(0);
@@ -190,13 +195,14 @@ const Game = () => {
   // Create hook to check for collisions with an apple
   React.useEffect(() => {
     const interval = setInterval(() => {
-      const ns = newSnake(snake, 4, key);
+      let ns = newSnake(snake, 6, key);
       apples.forEach((a, i) => {
         if (isCollision(ns, a, 10, 10, key)) {
           setApples(
             apples.slice(0, i).concat(generateApple(), ...apples.slice(i + 1)),
           );
           setScore(s => s + 1);
+          ns = newSnake(ns, 6, key, true);
         }
       });
       setSnake(ns);
