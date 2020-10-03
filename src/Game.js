@@ -44,12 +44,14 @@ const last = arr => {
   return arr.slice(-1)[0];
 };
 
+const distance = 1;
+
 const calcNewX = (lastSnake, key, i) => {
   if (!verticalKey(key)) {
     if (key === "ArrowRight") {
-      return lastSnake.x + 1 + i;
+      return lastSnake.x + distance + i;
     } else {
-      return lastSnake.x - 1 - i;
+      return lastSnake.x - distance - i;
     }
   } else {
     return lastSnake.x;
@@ -59,9 +61,9 @@ const calcNewX = (lastSnake, key, i) => {
 const calcNewY = (lastSnake, key, i) => {
   if (verticalKey(key)) {
     if (key === "ArrowDown") {
-      return lastSnake.y + 1 + i;
+      return lastSnake.y + distance + i;
     } else {
-      return lastSnake.y - 1 - i;
+      return lastSnake.y - distance - i;
     }
   } else {
     return lastSnake.y;
@@ -162,13 +164,17 @@ const isCollision = (snake, obj, w, h, key) => {
   }
 };
 
-const App = () => {
+const Game = () => {
+  // Stores location of snake
   const [snake, setSnake] = React.useState(defaultSnake);
 
+  // Stores current arrow key being pressed
   const [key, setKey] = React.useState("ArrowRight");
 
+  // Stores current list of apple locations
   const [apples, setApples] = React.useState([generateApple()]);
 
+  // Create hook to check for collisions with an apple
   React.useEffect(() => {
     const interval = setInterval(() => {
       const ns = newSnake(snake, 4, key);
@@ -180,14 +186,18 @@ const App = () => {
         }
       });
       setSnake(ns);
+      // 60 FPS rendering
     }, 1000 / 60);
     return () => {
       clearInterval(interval);
     };
   }, [snake, apples, key]);
 
+  // On key down, set the current value of the key
   const handleKeyDown = React.useCallback(
     e => {
+      // Check it's an arrow key, not equal to the current key
+      // and not the opposite direction from the current key
       if (keyCodes.has(e.key) && e.key !== key && isOpposite(key, e.key)) {
         setKey(e.key);
       }
@@ -195,6 +205,7 @@ const App = () => {
     [key],
   );
 
+  // Add event listener to handle key down
   React.useEffect(() => {
     document.addEventListener("keydown", handleKeyDown, false);
     return () => {
@@ -219,4 +230,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default Game;
