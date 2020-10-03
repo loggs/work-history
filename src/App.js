@@ -172,7 +172,7 @@ const App = () => {
   React.useEffect(() => {
     const interval = setInterval(() => {
       const ns = newSnake(snake, 4, key);
-      apples.map((a, i) => {
+      apples.forEach((a, i) => {
         if (isCollision(ns, a, 10, 10, key)) {
           setApples(
             apples.slice(0, i).concat(generateApple(), ...apples.slice(i + 1)),
@@ -184,24 +184,23 @@ const App = () => {
     return () => {
       clearInterval(interval);
     };
-  }, [snake]);
+  }, [snake, apples, key]);
 
-  const handleKeyDown = event => {
-    if (
-      keyCodes.has(event.key) &&
-      event.key !== key &&
-      isOpposite(key, event.key)
-    ) {
-      setKey(event.key);
-    }
-  };
+  const handleKeyDown = React.useCallback(
+    e => {
+      if (keyCodes.has(e.key) && e.key !== key && isOpposite(key, e.key)) {
+        setKey(e.key);
+      }
+    },
+    [key],
+  );
 
   React.useEffect(() => {
     document.addEventListener("keydown", handleKeyDown, false);
     return () => {
       document.removeEventListener("keydown", handleKeyDown, false);
     };
-  }, [key]);
+  }, [handleKeyDown]);
 
   return (
     <Canvas>
