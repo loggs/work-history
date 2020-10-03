@@ -6,6 +6,16 @@ const Canvas = styled.svg`
   height: ${window.innerHeight}px;
 `;
 
+const ScoreCard = styled.div`
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+`;
+
 const Snake = props => {
   return (
     <rect
@@ -174,6 +184,9 @@ const Game = () => {
   // Stores current list of apple locations
   const [apples, setApples] = React.useState([generateApple()]);
 
+  // Keep apple score
+  const [score, setScore] = React.useState(0);
+
   // Create hook to check for collisions with an apple
   React.useEffect(() => {
     const interval = setInterval(() => {
@@ -183,6 +196,7 @@ const Game = () => {
           setApples(
             apples.slice(0, i).concat(generateApple(), ...apples.slice(i + 1)),
           );
+          setScore(s => s + 1);
         }
       });
       setSnake(ns);
@@ -214,19 +228,22 @@ const Game = () => {
   }, [handleKeyDown]);
 
   return (
-    <Canvas>
-      {snake.map(s => (
-        <Snake
-          x={s.x}
-          y={s.y}
-          width={s.vertical ? "10" : "1"}
-          height={s.vertical ? "1" : "10"}
-        />
-      ))}
-      {apples.map(a => (
-        <Apple x={a.x} y={a.y} />
-      ))}
-    </Canvas>
+    <div style={{ position: "relative" }}>
+      <ScoreCard>{score}</ScoreCard>
+      <Canvas>
+        {snake.map(s => (
+          <Snake
+            x={s.x}
+            y={s.y}
+            width={s.vertical ? "10" : "1"}
+            height={s.vertical ? "1" : "10"}
+          />
+        ))}
+        {apples.map(a => (
+          <Apple x={a.x} y={a.y} />
+        ))}
+      </Canvas>
+    </div>
   );
 };
 
