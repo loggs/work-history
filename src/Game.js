@@ -134,7 +134,9 @@ const isOpposite = (key, newKey) => {
 };
 
 const isCollision = (snake, obj, w, h, key) => {
-  const fp = last(snake);
+  let fp = last(snake);
+  fp.x = (fp.x + window.innerWidth) % window.innerWidth;
+  fp.y = (fp.y + window.innerHeight) % window.innerHeight;
   const sw = fp.vertical ? 10 : 4;
   const sh = fp.vertical ? 4 : 10;
   const x3 = obj.x;
